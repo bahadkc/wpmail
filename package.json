@@ -4,7 +4,7 @@
   "description": "Automation to send email notifications for new WhatsApp messages",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node server.js",
     "dev": "node app.js",
     "web": "node server.js"
   },
