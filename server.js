@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const WhatsAppEmailNotifier = require('./app.js');
 
 const app = express();
@@ -11,6 +12,33 @@ let isRunning = false;
 // Serve static files from public directory
 app.use(express.static('public'));
 app.use(express.json());
+
+// Function to update environment configuration
+function updateEnvConfig(phoneNumber, emailAddress) {
+  try {
+    // Read the template file
+    const templatePath = path.join(__dirname, 'config.template.env');
+    let envContent = fs.readFileSync(templatePath, 'utf8');
+    
+    // Update the values
+    envContent = envContent.replace(/WHATSAPP_PHONE=.*/, `WHATSAPP_PHONE=${phoneNumber}`);
+    envContent = envContent.replace(/EMAIL_TO=.*/, `EMAIL_TO=${emailAddress}`);
+    
+    // Write to .env file
+    const envPath = path.join(__dirname, '.env');
+    fs.writeFileSync(envPath, envContent);
+    
+    // Update process.env
+    delete require.cache[require.resolve('dotenv')];
+    require('dotenv').config();
+    
+    console.log(`Updated configuration: Phone=${phoneNumber}, Email=${emailAddress}`);
+    return true;
+  } catch (error) {
+    console.error('Error updating environment configuration:', error);
+    return false;
+  }
+}
 
 // Home route
 app.get('/', (req, res) => {
@@ -24,9 +52,49 @@ app.post('/api/start', async (req, res) => {
   }
 
   try {
+    const { phoneNumber, emailAddress } = req.body;
+    
+    // Validate input
+    if (!phoneNumber || !emailAddress) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Phone number and email address are required!' 
+      });
+    }
+
+    // Validate phone number format
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid phone number format. Please use international format (e.g., +905551234567)' 
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailAddress)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid email address format!' 
+      });
+    }
+
+    // Update environment configuration
+    const configUpdated = updateEnvConfig(phoneNumber, emailAddress);
+    if (!configUpdated) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update configuration. Please try again.' 
+      });
+    }
+
     // Validate required environment variables
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_TO) {
-      throw new Error('Missing required email configuration. Please check your .env file.');
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email configuration is incomplete. Please check EMAIL_USER and EMAIL_PASS in the configuration.' 
+      });
     }
 
     notifier = new WhatsAppEmailNotifier();
@@ -35,7 +103,7 @@ app.post('/api/start', async (req, res) => {
     
     res.json({ 
       success: true, 
-      message: 'WhatsApp monitoring started successfully! Please scan the QR code in the browser window that opened.' 
+      message: `WhatsApp monitoring started successfully for ${phoneNumber}! Email notifications will be sent to ${emailAddress}. Please scan the QR code in the browser window that opened.` 
     });
   } catch (error) {
     console.error('Error starting WhatsApp monitoring:', error.message);

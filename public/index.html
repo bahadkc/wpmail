@@ -57,6 +57,49 @@
             line-height: 1.5;
         }
 
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .form-group input:invalid {
+            border-color: #e74c3c;
+        }
+
+        .form-group input:valid {
+            border-color: #27ae60;
+        }
+
+        .input-hint {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
+
         .start-button {
             background: linear-gradient(45deg, #25D366, #128C7E);
             color: white;
@@ -73,7 +116,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .start-button:hover {
+        .start-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(37, 211, 102, 0.4);
         }
@@ -159,6 +202,12 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .form-container {
+            text-align: left;
+            margin-bottom: 2rem;
         }
 
         @media (max-width: 600px) {
@@ -187,8 +236,33 @@
         <h1 class="welcome-text">Welcome to WP to Mail by Baha</h1>
         <p class="subtitle">Monitor your WhatsApp messages and get email notifications when you receive new messages from your top contacts.</p>
         
+        <div class="form-container">
+            <div class="form-group">
+                <label for="phoneNumber">WhatsApp Phone Number *</label>
+                <input 
+                    type="tel" 
+                    id="phoneNumber" 
+                    placeholder="+905551234567" 
+                    pattern="^\+[1-9]\d{1,14}$"
+                    required
+                >
+                <div class="input-hint">Enter your phone number with country code (e.g., +905551234567)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="emailAddress">Email Address *</label>
+                <input 
+                    type="email" 
+                    id="emailAddress" 
+                    placeholder="your-email@gmail.com"
+                    required
+                >
+                <div class="input-hint">Enter the email address where you want to receive notifications</div>
+            </div>
+        </div>
+        
         <div class="button-group">
-            <button id="startBtn" class="start-button">
+            <button id="startBtn" class="start-button" disabled>
                 Start Monitoring
             </button>
             <button id="stopBtn" class="stop-button hidden">
@@ -203,6 +277,8 @@
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
         const status = document.getElementById('status');
+        const phoneInput = document.getElementById('phoneNumber');
+        const emailInput = document.getElementById('emailAddress');
 
         function showStatus(message, type) {
             status.textContent = message;
@@ -220,13 +296,42 @@
                 startBtn.disabled = true;
             } else {
                 startBtn.innerHTML = 'Start Monitoring';
-                startBtn.disabled = false;
+                validateForm();
             }
         }
+
+        function validateForm() {
+            const phoneValid = phoneInput.validity.valid && phoneInput.value.trim() !== '';
+            const emailValid = emailInput.validity.valid && emailInput.value.trim() !== '';
+            
+            startBtn.disabled = !(phoneValid && emailValid);
+        }
+
+        function formatPhoneNumber(value) {
+            // Remove all non-digit characters except +
+            let cleaned = value.replace(/[^\d+]/g, '');
+            
+            // Ensure it starts with +
+            if (!cleaned.startsWith('+')) {
+                cleaned = '+' + cleaned;
+            }
+            
+            return cleaned;
+        }
+
+        phoneInput.addEventListener('input', function() {
+            this.value = formatPhoneNumber(this.value);
+            validateForm();
+        });
+
+        emailInput.addEventListener('input', validateForm);
 
         async function startMonitoring() {
             setLoading(true);
             hideStatus();
+            
+            const phoneNumber = phoneInput.value.trim();
+            const emailAddress = emailInput.value.trim();
             
             try {
                 const response = await fetch('/api/start', {
@@ -234,6 +339,10 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        emailAddress: emailAddress
+                    })
                 });
                 
                 const data = await response.json();
@@ -242,6 +351,9 @@
                     showStatus(data.message, 'success');
                     startBtn.classList.add('hidden');
                     stopBtn.classList.remove('hidden');
+                    // Disable inputs when monitoring is active
+                    phoneInput.disabled = true;
+                    emailInput.disabled = true;
                 } else {
                     showStatus(data.message, 'error');
                 }
@@ -267,6 +379,10 @@
                     showStatus(data.message, 'info');
                     stopBtn.classList.add('hidden');
                     startBtn.classList.remove('hidden');
+                    // Re-enable inputs when monitoring stops
+                    phoneInput.disabled = false;
+                    emailInput.disabled = false;
+                    validateForm();
                 } else {
                     showStatus(data.message, 'error');
                 }
@@ -284,9 +400,14 @@
                     startBtn.classList.add('hidden');
                     stopBtn.classList.remove('hidden');
                     showStatus('WhatsApp monitoring is currently active', 'success');
+                    phoneInput.disabled = true;
+                    emailInput.disabled = true;
+                } else {
+                    validateForm();
                 }
             } catch (error) {
                 console.log('Could not check status');
+                validateForm();
             }
         }
 
@@ -295,6 +416,9 @@
 
         // Check status on page load
         checkStatus();
+
+        // Initial validation
+        validateForm();
     </script>
 </body>
 </html> 
