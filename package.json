@@ -1,0 +1,26 @@
+{
+  "name": "whatsapp-email-notifier",
+  "version": "1.0.0",
+  "description": "Automation to send email notifications for new WhatsApp messages",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js",
+    "web": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.7",
+    "puppeteer": "^21.5.2",
+    "winston": "^3.11.0"
+  },
+  "keywords": [
+    "whatsapp",
+    "email",
+    "automation",
+    "notifications"
+  ],
+  "author": "Baha",
+  "license": "MIT"
+}
