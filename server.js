@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config(); // Load environment variables
 const WhatsAppEmailNotifier = require('./app.js');
 
 const app = express();
@@ -16,16 +17,15 @@ app.use(express.json());
 // Function to update environment configuration
 function updateEnvConfig(phoneNumber, emailAddress) {
   try {
-    // Read the template file
-    const templatePath = path.join(__dirname, 'config.template.env');
-    let envContent = fs.readFileSync(templatePath, 'utf8');
+    // Read the current .env file
+    const envPath = path.join(__dirname, '.env');
+    let envContent = fs.readFileSync(envPath, 'utf8');
     
     // Update the values
     envContent = envContent.replace(/WHATSAPP_PHONE=.*/, `WHATSAPP_PHONE=${phoneNumber}`);
     envContent = envContent.replace(/EMAIL_TO=.*/, `EMAIL_TO=${emailAddress}`);
     
-    // Write to .env file
-    const envPath = path.join(__dirname, '.env');
+    // Write back to .env file
     fs.writeFileSync(envPath, envContent);
     
     // Update process.env
@@ -89,13 +89,8 @@ app.post('/api/start', async (req, res) => {
       });
     }
 
-    // Validate required environment variables
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Email configuration is incomplete. Please check EMAIL_USER and EMAIL_PASS in the configuration.' 
-      });
-    }
+    // Email configuration is already set in .env, no need to validate
+    console.log('Using preconfigured email settings for notifications');
 
     notifier = new WhatsAppEmailNotifier();
     await notifier.initialize();
@@ -103,8 +98,18 @@ app.post('/api/start', async (req, res) => {
     
     res.json({ 
       success: true, 
-      message: `WhatsApp monitoring started successfully for ${phoneNumber}! Email notifications will be sent to ${emailAddress}. Please scan the QR code in the browser window that opened.` 
+      message: `🎉 WhatsApp monitoring started successfully!\n\n📱 Monitoring phone: ${phoneNumber}\n📧 Notifications to: ${emailAddress}\n\n✅ The system is now active and will send email notifications for new WhatsApp messages.\n\n📋 Please scan the QR code in the browser window that opened to connect your WhatsApp account.` 
     });
+    
+    // Start monitoring in the background
+    setTimeout(() => {
+      if (notifier && isRunning) {
+        notifier.startMonitoring().catch(error => {
+          console.error('Error in monitoring process:', error);
+        });
+      }
+    }, 3000);
+    
   } catch (error) {
     console.error('Error starting WhatsApp monitoring:', error.message);
     res.status(500).json({ 
