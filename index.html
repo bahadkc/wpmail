@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WP to Mail by Baha - WhatsApp Email Notifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .welcome-text {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .features {
+            background: rgba(37, 211, 102, 0.1);
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .features h3 {
+            color: #25D366;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: #2c3e50;
+        }
+
+        .features li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .input-hint {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
+
+        .setup-button {
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .setup-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(37, 211, 102, 0.4);
+        }
+
+        .download-section {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .download-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 0.5rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: pre-line;
+        }
+
+        .status.success {
+            background: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .status.info {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .ready-badge {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .instructions {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f39c12;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .instructions ol {
+            padding-left: 1.5rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.8rem;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ready-badge">🌐 GitHub Pages Version</div>
+        
+        <div class="logo">📱💌</div>
+        <h1 class="welcome-text">WhatsApp Email Notifier</h1>
+        <p class="subtitle">Get instant email notifications for your WhatsApp messages</p>
+        
+        <div class="features">
+            <h3>🎯 What This Does</h3>
+            <ul>
+                <li>Monitors your WhatsApp for new messages</li>
+                <li>Sends instant email notifications</li>
+                <li>Tracks top 3 most active contacts</li>
+                <li>Works 24/7 in the background</li>
+                <li>Completely automated - no maintenance needed</li>
+            </ul>
+        </div>
+
+        <form id="userForm">
+            <div class="form-group">
+                <label for="phoneNumber">📱 Your WhatsApp Phone Number</label>
+                <input 
+                    type="tel" 
+                    id="phoneNumber" 
+                    name="phoneNumber" 
+                    placeholder="+905551234567" 
+                    required
+                    pattern="^\+[1-9]\d{1,14}$"
+                >
+                <div class="input-hint">Include country code (e.g., +90 for Turkey)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="emailAddress">📧 Email for Notifications</label>
+                <input 
+                    type="email" 
+                    id="emailAddress" 
+                    name="emailAddress" 
+                    placeholder="your.email@gmail.com" 
+                    required
+                >
+                <div class="input-hint">Where you want to receive WhatsApp notifications</div>
+            </div>
+
+            <button type="submit" class="setup-button" id="setupButton">
+                🚀 Get Setup Instructions
+            </button>
+        </form>
+
+        <div id="status" class="status hidden"></div>
+
+        <div class="instructions hidden" id="instructions">
+            <h3>📋 Setup Instructions</h3>
+            <ol>
+                <li><strong>Download the application</strong> using the buttons below</li>
+                <li><strong>Extract the files</strong> to a folder on your computer</li>
+                <li><strong>Install Node.js</strong> from <a href="https://nodejs.org" target="_blank">nodejs.org</a></li>
+                <li><strong>Open terminal/command prompt</strong> in the extracted folder</li>
+                <li><strong>Run:</strong> <code>npm install</code></li>
+                <li><strong>Run:</strong> <code>npm run web</code></li>
+                <li><strong>Open browser:</strong> http://localhost:3000</li>
+                <li><strong>Enter your details</strong> and start monitoring!</li>
+            </ol>
+        </div>
+
+        <div class="download-section hidden" id="downloadSection">
+            <h3>📥 Download WhatsApp Email Notifier</h3>
+            <p>Choose your preferred download method:</p>
+            <a href="https://github.com/bahadkc/wpmail/archive/refs/heads/main.zip" class="download-button">
+                💾 Download ZIP
+            </a>
+            <a href="https://github.com/bahadkc/wpmail" class="download-button" target="_blank">
+                🔗 View on GitHub
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('userForm');
+        const setupButton = document.getElementById('setupButton');
+        const status = document.getElementById('status');
+        const instructions = document.getElementById('instructions');
+        const downloadSection = document.getElementById('downloadSection');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const emailAddress = document.getElementById('emailAddress').value.trim();
+
+            if (!phoneNumber || !emailAddress) {
+                showStatus('Please fill in both fields!', 'error');
+                return;
+            }
+
+            // Store user data (you could send this to an analytics service if needed)
+            localStorage.setItem('userPhone', phoneNumber);
+            localStorage.setItem('userEmail', emailAddress);
+
+            showStatus(`✅ Perfect! Your details have been saved:\n📱 Phone: ${phoneNumber}\n📧 Email: ${emailAddress}\n\nNow follow the setup instructions below to get started!`, 'success');
+            
+            // Show instructions and download section
+            instructions.classList.remove('hidden');
+            downloadSection.classList.remove('hidden');
+            
+            // Scroll to instructions
+            instructions.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.classList.remove('hidden');
+        }
+
+        // Auto-fill saved data if available
+        window.addEventListener('load', () => {
+            const savedPhone = localStorage.getItem('userPhone');
+            const savedEmail = localStorage.getItem('userEmail');
+            
+            if (savedPhone) {
+                document.getElementById('phoneNumber').value = savedPhone;
+            }
+            if (savedEmail) {
+                document.getElementById('emailAddress').value = savedEmail;
+            }
+
+            if (savedPhone && savedEmail) {
+                instructions.classList.remove('hidden');
+                downloadSection.classList.remove('hidden');
+                showStatus('✅ Welcome back! Your details are saved below.', 'info');
+            }
+        });
+    </script>
+</body>
+</html> 
